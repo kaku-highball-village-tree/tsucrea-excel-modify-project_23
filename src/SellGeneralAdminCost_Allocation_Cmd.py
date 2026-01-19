@@ -4766,35 +4766,41 @@ def create_pj_summary_sales_cost_sg_admin_margin_excel(pszDirectory: str) -> Opt
     for pszName in os.listdir(pszDirectory):
         if objPattern.match(pszName):
             objCandidates.append(pszName)
-    if len(objCandidates) < 2:
+    if not objCandidates:
         return None
     objCandidates.sort()
+    pszInputName = objCandidates[-1]
+    objMatch = re.match(
+        r"^0001_PJサマリ_step0008_(.+?)_単月・累計_損益計算書\.tsv$",
+        pszInputName,
+    )
+    pszProjectName = objMatch.group(1) if objMatch else "売上・売上原価・販管費・利益率"
     pszTemplatePath: str = os.path.join(
         os.path.dirname(__file__),
-        "TEMPLATE_PJサマリ_単月・累計_損益計算書・製造原価報告書・工数.xlsx",
+        "TEMPLATE_PJサマリ_PJ別_売上・売上原価・販管費・利益率.xlsx",
     )
     if not os.path.isfile(pszTemplatePath):
         return None
     objWorkbook = load_workbook(pszTemplatePath)
-    for iIndex, pszName in enumerate(objCandidates[:2]):
-        if iIndex < len(objWorkbook.worksheets):
-            objSheet = objWorkbook.worksheets[iIndex]
-        else:
-            objSheet = objWorkbook.create_sheet()
-        objRows = read_tsv_rows(os.path.join(pszDirectory, pszName))
-        for iRowIndex, objRow in enumerate(objRows, start=1):
-            for iColumnIndex, pszValue in enumerate(objRow, start=1):
-                objCellValue = parse_tsv_value_for_excel(pszValue)
-                objSheet.cell(
-                    row=iRowIndex,
-                    column=iColumnIndex,
-                    value=objCellValue,
-                )
-    pszTargetDirectory: str = os.path.join(os.path.dirname(__file__), "PJサマリ")
+    objSheet = objWorkbook.worksheets[0]
+    objRows = read_tsv_rows(os.path.join(pszDirectory, pszInputName))
+    for iRowIndex, objRow in enumerate(objRows, start=1):
+        for iColumnIndex, pszValue in enumerate(objRow, start=1):
+            objCellValue = parse_tsv_value_for_excel(pszValue)
+            objSheet.cell(
+                row=iRowIndex,
+                column=iColumnIndex,
+                value=objCellValue,
+            )
+    pszTargetDirectory: str = os.path.join(
+        pszDirectory,
+        "PJサマリ",
+        "PJ別_損益計算書・製造原価報告書・工数",
+    )
     os.makedirs(pszTargetDirectory, exist_ok=True)
     pszOutputPath: str = os.path.join(
         pszTargetDirectory,
-        "PJサマリ_PJ別_売上・売上原価・販管費・利益率.xlsx",
+        f"PJサマリ_単・累計_{pszProjectName}.xlsx",
     )
     objWorkbook.save(pszOutputPath)
     return pszOutputPath
