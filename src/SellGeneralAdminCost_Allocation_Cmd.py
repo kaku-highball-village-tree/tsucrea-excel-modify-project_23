@@ -2691,6 +2691,38 @@ def build_step0008_rows_from_step0007_path(pszStep0007Path: str) -> None:
     write_tsv_rows(pszStep0008Path, objOutputRows)
 
 
+def build_step0009_rows_from_step0008_path(pszStep0008Path: str) -> None:
+    if not os.path.isfile(pszStep0008Path):
+        return
+
+    objRows = read_tsv_rows(pszStep0008Path)
+    if not objRows:
+        return
+
+    objHeaderRow: List[str] = [
+        "－",
+        "－",
+        "PJコード",
+        "単月",
+        "累計",
+        "単月",
+        "累計",
+        "単月",
+        "累計",
+        "単月",
+        "累計",
+        "単月",
+        "累計",
+        "単月",
+        "累計",
+    ]
+    objOutputRows: List[List[str]] = [objHeaderRow]
+    objOutputRows.extend([list(objRow) for objRow in objRows[1:]])
+
+    pszStep0009Path: str = pszStep0008Path.replace("step0008_", "step0009_", 1)
+    write_tsv_rows(pszStep0009Path, objOutputRows)
+
+
 def filter_rows_by_names(
     objRows: List[List[str]],
     objTargetNames: List[str],
@@ -4274,6 +4306,8 @@ def create_pj_summary(
         build_step0007_rows_from_step0006_path(pszStep0006Path)
         pszStep0007Path: str = pszStep0006Path.replace("step0006_", "step0007_", 1)
         build_step0008_rows_from_step0007_path(pszStep0007Path)
+        pszStep0008Path: str = pszStep0007Path.replace("step0007_", "step0008_", 1)
+        build_step0009_rows_from_step0008_path(pszStep0008Path)
 
     objGrossProfitColumns: List[str] = ["科目名", "売上総利益", "純売上高"]
     objGrossProfitSingleRows: List[List[str]] = filter_rows_by_columns(
