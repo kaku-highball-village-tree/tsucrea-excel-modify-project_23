@@ -2665,30 +2665,8 @@ def build_step0008_rows_from_step0007_path(pszStep0007Path: str) -> None:
     if len(objRows) < 2:
         return
 
-    objHeaderRow: List[str] = objRows[1]
-    objTargetIndices: List[int] = [
-        iIndex for iIndex, pszValue in enumerate(objHeaderRow) if pszValue == "粗利益率"
-    ]
-    if not objTargetIndices:
-        return
-
-    objOutputRows: List[List[str]] = []
-    for iRowIndex, objRow in enumerate(objRows):
-        if iRowIndex < 2:
-            objOutputRows.append(list(objRow))
-            continue
-        objNewRow = list(objRow)
-        for iColumnIndex in objTargetIndices:
-            if iColumnIndex >= len(objNewRow):
-                continue
-            if objNewRow[iColumnIndex] == "'+∞":
-                objNewRow[iColumnIndex] = "＋∞"
-            elif objNewRow[iColumnIndex] == "'－∞":
-                objNewRow[iColumnIndex] = "－∞"
-        objOutputRows.append(objNewRow)
-
     pszStep0008Path: str = pszStep0007Path.replace("step0007_", "step0008_", 1)
-    write_tsv_rows(pszStep0008Path, objOutputRows)
+    write_tsv_rows(pszStep0008Path, [list(objRow) for objRow in objRows])
 
 
 def build_step0009_rows_from_step0008_path(pszStep0008Path: str) -> None:
@@ -4803,38 +4781,48 @@ def create_pj_summary_sales_cost_sg_admin_margin_excel(pszDirectory: str) -> Opt
     if not objCandidates:
         return None
     objCandidates.sort()
-    pszInputName = objCandidates[-1]
-    objMatch = re.match(
-        r"^0001_PJサマリ_step0009_(.+?)_単月・累計_損益計算書\.tsv$",
-        pszInputName,
-    )
-    pszProjectName = objMatch.group(1) if objMatch else "売上・売上原価・販管費・利益率"
     pszTemplatePath: str = os.path.join(
         os.path.dirname(__file__),
-        "TEMPLATE_PJサマリ_PJ別_売上・売上原価・販管費・利益率.xlsx",
+        "TEMPLATE_PJサマリ_単月・累計_損益計算書・製造原価報告書・工数.xlsx",
     )
     if not os.path.isfile(pszTemplatePath):
         return None
     objWorkbook = load_workbook(pszTemplatePath)
-    objSheet = objWorkbook.worksheets[0]
-    objRows = read_tsv_rows(os.path.join(pszDirectory, pszInputName))
-    for iRowIndex, objRow in enumerate(objRows, start=1):
-        for iColumnIndex, pszValue in enumerate(objRow, start=1):
-            objCellValue = parse_tsv_value_for_excel(pszValue)
-            objSheet.cell(
-                row=iRowIndex,
-                column=iColumnIndex,
-                value=objCellValue,
-            )
+    objBaseSheet = objWorkbook.worksheets[0]
+    objSheetNamePattern = re.compile(
+        r"^0001_PJサマリ_step0009_(.+?)_単月・累計_損益計算書\.tsv$",
+    )
+    objUsedSheetNames: set[str] = set()
+    for pszInputName in objCandidates:
+        objSheet = objWorkbook.copy_worksheet(objBaseSheet)
+        objMatch = objSheetNamePattern.match(pszInputName)
+        pszSheetName = objMatch.group(1) if objMatch else os.path.splitext(pszInputName)[0]
+        pszSheetName = pszSheetName[:31] if pszSheetName else "Sheet"
+        pszCandidateName = pszSheetName
+        iSuffix = 1
+        while pszCandidateName in objUsedSheetNames:
+            iSuffix += 1
+            pszCandidateName = f"{pszSheetName[:28]}_{iSuffix}"
+        objSheet.title = pszCandidateName
+        objUsedSheetNames.add(pszCandidateName)
+        objRows = read_tsv_rows(os.path.join(pszDirectory, pszInputName))
+        for iRowIndex, objRow in enumerate(objRows, start=1):
+            for iColumnIndex, pszValue in enumerate(objRow, start=1):
+                objCellValue = parse_tsv_value_for_excel(pszValue)
+                objSheet.cell(
+                    row=iRowIndex,
+                    column=iColumnIndex,
+                    value=objCellValue,
+                )
+    objWorkbook.remove(objBaseSheet)
     pszTargetDirectory: str = os.path.join(
         pszDirectory,
         "PJサマリ",
-        "PJ別_損益計算書・製造原価報告書・工数",
     )
     os.makedirs(pszTargetDirectory, exist_ok=True)
     pszOutputPath: str = os.path.join(
         pszTargetDirectory,
-        f"PJサマリ_単・累計_{pszProjectName}.xlsx",
+        "PJサマリ_単月・累計_損益計算書・製造原価報告書・工数.xlsx",
     )
     objWorkbook.save(pszOutputPath)
     return pszOutputPath
