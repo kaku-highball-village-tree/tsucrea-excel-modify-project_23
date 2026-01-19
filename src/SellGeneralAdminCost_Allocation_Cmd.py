@@ -4815,6 +4815,12 @@ def create_pj_summary_sales_cost_sg_admin_margin_excel(pszDirectory: str) -> Opt
             objSheet = objWorkbook.worksheets[iIndex]
         else:
             objSheet = objWorkbook.create_sheet()
+        objMatch = re.match(
+            r"^0001_PJサマリ_step0009_(.+?)_単月・累計_損益計算書\.tsv$",
+            pszInputName,
+        )
+        if objMatch:
+            objSheet.title = objMatch.group(1)
         objRows = read_tsv_rows(os.path.join(pszDirectory, pszInputName))
         for iRowIndex, objRow in enumerate(objRows, start=1):
             for iColumnIndex, pszValue in enumerate(objRow, start=1):
