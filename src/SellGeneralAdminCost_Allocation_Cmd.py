@@ -4796,7 +4796,7 @@ def create_pj_summary_gross_profit_ranking_excel(pszDirectory: str) -> Optional[
 
 def create_pj_summary_sales_cost_sg_admin_margin_excel(pszDirectory: str) -> Optional[str]:
     objCandidates: List[str] = []
-    objPattern = re.compile(r"^0001_PJサマリ_step0008_.*_単月・累計_損益計算書\.tsv$")
+    objPattern = re.compile(r"^0001_PJサマリ_step0009_.*_単月・累計_損益計算書\.tsv$")
     for pszName in os.listdir(pszDirectory):
         if objPattern.match(pszName):
             objCandidates.append(pszName)
@@ -4805,7 +4805,7 @@ def create_pj_summary_sales_cost_sg_admin_margin_excel(pszDirectory: str) -> Opt
     objCandidates.sort()
     pszInputName = objCandidates[-1]
     objMatch = re.match(
-        r"^0001_PJサマリ_step0008_(.+?)_単月・累計_損益計算書\.tsv$",
+        r"^0001_PJサマリ_step0009_(.+?)_単月・累計_損益計算書\.tsv$",
         pszInputName,
     )
     pszProjectName = objMatch.group(1) if objMatch else "売上・売上原価・販管費・利益率"
