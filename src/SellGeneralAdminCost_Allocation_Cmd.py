@@ -4805,28 +4805,16 @@ def create_pj_summary_sales_cost_sg_admin_margin_excel(pszDirectory: str) -> Opt
     objCandidates.sort()
     pszTemplatePath: str = os.path.join(
         os.path.dirname(__file__),
-        "TEMPLATE_PJサマリ_単月・累計_損益計算書・製造原価報告書・工数.xlsx",
+        "TEMPLATE_PJサマリ_PJ別_売上・売上原価・販管費・利益率.xlsx",
     )
     if not os.path.isfile(pszTemplatePath):
         return None
     objWorkbook = load_workbook(pszTemplatePath)
-    objBaseSheet = objWorkbook.worksheets[0]
-    objSheetNamePattern = re.compile(
-        r"^0001_PJサマリ_step0009_(.+?)_単月・累計_損益計算書\.tsv$",
-    )
-    objUsedSheetNames: set[str] = set()
-    for pszInputName in objCandidates:
-        objSheet = objWorkbook.copy_worksheet(objBaseSheet)
-        objMatch = objSheetNamePattern.match(pszInputName)
-        pszSheetName = objMatch.group(1) if objMatch else os.path.splitext(pszInputName)[0]
-        pszSheetName = pszSheetName[:31] if pszSheetName else "Sheet"
-        pszCandidateName = pszSheetName
-        iSuffix = 1
-        while pszCandidateName in objUsedSheetNames:
-            iSuffix += 1
-            pszCandidateName = f"{pszSheetName[:28]}_{iSuffix}"
-        objSheet.title = pszCandidateName
-        objUsedSheetNames.add(pszCandidateName)
+    for iIndex, pszInputName in enumerate(objCandidates):
+        if iIndex < len(objWorkbook.worksheets):
+            objSheet = objWorkbook.worksheets[iIndex]
+        else:
+            objSheet = objWorkbook.create_sheet()
         objRows = read_tsv_rows(os.path.join(pszDirectory, pszInputName))
         for iRowIndex, objRow in enumerate(objRows, start=1):
             for iColumnIndex, pszValue in enumerate(objRow, start=1):
@@ -4836,15 +4824,11 @@ def create_pj_summary_sales_cost_sg_admin_margin_excel(pszDirectory: str) -> Opt
                     column=iColumnIndex,
                     value=objCellValue,
                 )
-    objWorkbook.remove(objBaseSheet)
-    pszTargetDirectory: str = os.path.join(
-        pszDirectory,
-        "PJサマリ",
-    )
+    pszTargetDirectory: str = os.path.join(pszDirectory, "PJサマリ")
     os.makedirs(pszTargetDirectory, exist_ok=True)
     pszOutputPath: str = os.path.join(
         pszTargetDirectory,
-        "PJサマリ_単月・累計_損益計算書・製造原価報告書・工数.xlsx",
+        "PJサマリ_PJ別_売上・売上原価・販管費・利益率.xlsx",
     )
     objWorkbook.save(pszOutputPath)
     return pszOutputPath
