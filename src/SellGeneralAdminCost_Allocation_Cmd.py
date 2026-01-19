@@ -4822,7 +4822,7 @@ def create_pj_summary_sales_cost_sg_admin_margin_excel(pszDirectory: str) -> Opt
     os.makedirs(pszTargetDirectory, exist_ok=True)
     pszOutputPath: str = os.path.join(
         pszTargetDirectory,
-        "PJサマリ_単月・累計_損益計算書・製造原価報告書・工数.xlsx",
+        "PJサマリ_PJ別_売上・売上原価・販管費・利益率.xlsx",
     )
     objWorkbook.save(pszOutputPath)
     return pszOutputPath
