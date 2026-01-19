@@ -4783,7 +4783,7 @@ def create_pj_summary_sales_cost_sg_admin_margin_excel(pszDirectory: str) -> Opt
     objCandidates.sort()
     pszTemplatePath: str = os.path.join(
         os.path.dirname(__file__),
-        "TEMPLATE_PJサマリ_PJ別_売上・売上原価・販管費・利益率.xlsx",
+        "TEMPLATE_PJサマリ_単月・累計_損益計算書・製造原価報告書・工数.xlsx",
     )
     if not os.path.isfile(pszTemplatePath):
         return None
